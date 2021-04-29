@@ -1,6 +1,6 @@
 /**
  * @file list.hpp
- * @author yahya mohammed (you@domain.com)
+ * @author yahya mohammed ( goldroger.1993@outlook.com )
  * @brief a singly linked list with modern c++
  * @version 0.2
  * @date 2021-04-28
