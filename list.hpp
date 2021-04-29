@@ -2,17 +2,15 @@
  * @file list.hpp
  * @author yahya mohammed (you@domain.com)
  * @brief a singly linked list with modern c++
- * @version 0.1
+ * @version 0.2
  * @date 2021-04-28
- *
  * @license MIT License 2021
- *
  */
 
 #ifndef LIST_HPP
 #define LIST_HPP
 
-#include <cstddef>
+#include <initializer_list>
 #include <exception>
 #include <iostream>
 #include <memory>
@@ -33,6 +31,14 @@ private:
     std::size_t             m_size{};
 
 public:
+
+    /* constructors */
+    List_ () = default;
+
+    List_ ( const std::initializer_list<T>& arg )
+    {
+        for ( const auto& i : arg ) { push_back( i ); }
+    }
 
     /*@ methods: */
     /**
@@ -130,7 +136,6 @@ public:
      * @param arg
      * @return auto&
      */
-    //
     [[nodiscard]] constexpr auto at( const std::shared_ptr<Node>& arg ) ->auto&
     {
         return arg->m_data;
@@ -243,7 +248,6 @@ public:
         if ( pos == 0 ) { pop_front(); }
         //
         std::shared_ptr<Node> prev = std::make_shared<Node>();
-        std::shared_ptr<Node> con = std::make_shared<Node>();
         std::shared_ptr<Node> next = m_head;
         // ex: 0, 1, 2, 3, 4, 5 : pop_at(1) now:
         std::shared_ptr<Node> it = m_head;
@@ -255,8 +259,7 @@ public:
         prev->m_next = next; // 0 -> 2 -> 3 -> 4 -> 5 and whatever was node 1, is now gone
         --m_size;
         //
-        it->m_next = nullptr;
-        it.reset();
+        it = nullptr; // 1 -> nullptr
     }
 };
 
