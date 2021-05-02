@@ -68,17 +68,6 @@ public:
     }
 
     /**
-     * @brief return iterator to first element
-     * @complexity O(1)
-     * @return const auto&
-     */
-    [[nodiscard]] constexpr inline auto begin() ->const auto&
-    {
-        if ( is_empty() ) { throw std::runtime_error("list is empty...\n"); }
-        return m_head;
-    }
-
-    /**
      * @brief return last element&
      * @complexity O(1)
      * @return T&
@@ -87,17 +76,6 @@ public:
     {
         if ( is_empty() ) { throw std::runtime_error("list is empty...\n"); }
         return m_tail->m_data;
-    }
-
-    /**
-     * @brief returns iterator to last element
-     * @complexity O(1)
-     * @return const auto&
-     */
-    [[nodiscard]] constexpr inline auto end() ->const auto&
-    {
-        if ( is_empty() ) { throw std::runtime_error("list is empty...\n"); }
-        return m_tail;
     }
 
     //
