@@ -6,7 +6,6 @@ auto main() ->int
     //
     std::cout << nums.size() << '\n';
     nums.pop_at(1);
-    std::cout << nums.at( nums.end()->m_next ) << '\n'; // print second data in O(1)
     nums.print();
     //
     std::cin.get();
