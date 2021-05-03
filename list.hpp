@@ -292,8 +292,10 @@ public:
   {
     if (l1.is_empty()) { throw std::runtime_error("--list is empty..."); }
     if (l2.is_empty()) { throw std::runtime_error("--list is empty..."); }
-    for (std::size_t i = 0; i < l1.size(); ++i ) {
+    for (std::size_t i = 0; i < l1.size(); ++i) {
       push_back( l1.at(i) );
+    }
+    for (std::size_t i = 0; i < l2.size(); ++i) {
       push_back( l2.at(i) );
     }
   }
