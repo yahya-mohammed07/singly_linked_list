@@ -312,12 +312,13 @@ public:
   auto split(List_<T> &l1, List_<T> &l2) -> void
   {
     if (is_empty()) { empty_list(); }
-    const auto& s = size();
-    for (std::size_t i = 0; i < (s/2); ++i) {
-      l1.push_back( at(i) );
+    const auto& s       = size();
+    sh_ptr      it      = { m_head };
+    for (std::size_t i = 0; i < (s/2); ++i, it = it->m_next) {
+      l1.push_back( at(it) );
     }
-    for ( std::size_t i = (s/2); i < s; ++i ) {
-      l2.push_back( at(i) );
+    for ( std::size_t i = (s/2); i < s; ++i , it = it->m_next) {
+      l2.push_back( at(it) );
     }
   }
 
@@ -331,11 +332,13 @@ public:
   {
     if (l1.is_empty()) { empty_list(); }
     if (l2.is_empty()) { empty_list(); }
-    for (std::size_t i = 0; i < l1.size(); ++i) {
-      push_back( l1.at(i) );
+    sh_ptr it_l1       = { l1.m_head };
+    for (std::size_t i = 0; i < l1.size(); ++i, it_l1 = it_l1->m_next) {
+      push_back( l1.at(it_l1) );
     }
-    for (std::size_t i = 0; i < l2.size(); ++i) {
-      push_back( l2.at(i) );
+    sh_ptr it_l2       = { l2.m_head };
+    for (std::size_t i = 0; i < l2.size(); ++i, it_l2 = it_l2->m_next) {
+      push_back( l2.at(it_l2) );
     }
   }
 
