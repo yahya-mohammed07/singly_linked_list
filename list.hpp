@@ -2,7 +2,7 @@
 * @file list.hpp
 * @author yahya mohammed ( goldroger.1993@outlook.com )
 * @brief a singly linked list with modern c++
-* @version 1.2
+* @version 1.5
 * @date 2021-04-28
 * @license MIT License 2021
 */
@@ -57,7 +57,7 @@ public:
    * @return true
    * @return false
    */
-  [[nodiscard]] constexpr inline auto is_empty() -> bool {
+  [[nodiscard]] constexpr inline auto is_empty() const -> bool {
     return m_head == nullptr ? true : false;
   }
 
@@ -66,14 +66,14 @@ public:
    * @complexity O(1)
    * @return std::size_t
    */
-  [[nodiscard]] constexpr inline auto size() -> std::size_t { return m_size; }
+  [[nodiscard]] constexpr inline auto size() const -> std::size_t { return m_size; }
 
   /**
    * @brief returns first element
    * @complexity O(1)
    * @return T&
    */
-  [[nodiscard]] constexpr inline auto front() -> T & {
+  [[nodiscard]] constexpr inline auto front() const -> T & {
     if (is_empty()) { empty_list(); }
     return m_head->m_data;
   }
@@ -83,13 +83,13 @@ public:
    * @complexity O(1)
    * @return T&
    */
-  [[nodiscard]] constexpr inline auto back() -> T &
+  [[nodiscard]] constexpr inline auto back() const -> T &
   {
     if (is_empty()) { empty_list(); }
     return m_tail->m_data;
   }
 
-  auto print() -> void
+  auto print() const -> void
   {
     if (!is_empty()) {
       sh_ptr it{};
@@ -107,7 +107,7 @@ public:
   * @param times
   * @return auto&
   */
-  [[nodiscard]] constexpr auto at(const std::size_t times) -> auto &
+  [[nodiscard]] constexpr auto at(const std::size_t times) const -> auto &
   {
     if (is_empty())                   { empty_list(); }
     if (times < 0 || times >= size()) { empty_list(); }
@@ -118,7 +118,7 @@ public:
     return it->m_data;
   }
 
-  [[nodiscard]] constexpr inline auto at(const sh_ptr& ptr) -> auto &
+  [[nodiscard]] constexpr inline auto at(const sh_ptr& ptr) const -> auto &
   {
     return ptr->m_data;
   }
@@ -295,7 +295,7 @@ public:
     for (std::size_t i = 0; i < pos && next != nullptr; ++i) {
       prev  = it;                 // 0
       next  = it->m_next->m_next; // 2
-      it    = it->m_next;           // 1
+      it    = it->m_next;         // 1
     }
     prev->m_next = next; // 0 -> 2 -> 3 -> 4 -> 5 and whatever was node 1, is now gone
     --m_size;
@@ -312,8 +312,8 @@ public:
   auto split(List_<T> &l1, List_<T> &l2) -> void
   {
     if (is_empty()) { empty_list(); }
-    const auto& s       = size();
-    sh_ptr      it      = { m_head };
+    const auto& s = size();
+    sh_ptr it = { m_head };
     for (std::size_t i = 0; i < (s/2); ++i, it = it->m_next) {
       l1.push_back( at(it) );
     }
@@ -346,7 +346,7 @@ public:
   * @brief: sorts element in ASC order by default put `true` for DESC
   * @conplexity  O(n^2)
   */
-  constexpr auto sort(bool desc = false) -> void
+  constexpr auto sort(bool desc = false) const -> void
   {
     if ( is_empty() ) { empty_list(); }
     bool sorted   = true;
@@ -386,7 +386,7 @@ public:
   * @brief check if the list is sorted ASC
   * @complexity O(n)
   */
-  [[nodiscard]] constexpr auto is_sorted() -> bool
+  [[nodiscard]] constexpr auto is_sorted() const -> bool
   {
     if ( is_empty() ) { empty_list(); }
     bool check  = false;
@@ -400,6 +400,37 @@ public:
       it = it->m_next;
     }
     return check;
+  }
+
+  /**
+  * @brief search for a value
+  * @conplexity O(n)
+  * @param target
+  */
+  [[nodiscard]] constexpr auto search(const T & target) const -> bool
+  {
+    if (is_empty())   { empty_list(); }
+    sh_ptr it        ={ m_head };
+    for (std::size_t i = 0; i < size(); ++i, it = it->m_next) {
+      if ( at(it) == target ) { return true; }
+    }
+    return false;
+  }
+
+  /**
+  * @brief returns the loacation of that node containinng target
+  * @conplexity O(n)
+  * @param target
+  * @return std::size_t
+  */
+  [[nodiscard]] constexpr auto locate(const T& target) const -> std::size_t
+  {
+    if (is_empty()) { empty_list(); }
+    sh_ptr  it      = {m_head};
+    for (std::size_t i = 0; i < size(); ++i, it = it->m_next) {
+      if ( at(it) == target ) { return i; }
+    }
+    return {};
   }
 
   /**
