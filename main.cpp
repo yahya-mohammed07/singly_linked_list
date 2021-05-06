@@ -8,7 +8,7 @@ auto main() ->int
   //
   auto sum = std::accumulate(nums.begin(), nums.end(), 0);
   std::cout << sum << '\n';
-  for ( const auto& i : nums) { // not including head // @fixme
+  for ( const auto& i : nums) {
     std::cout << i << ' ';
   }
   List_<int> temp;
