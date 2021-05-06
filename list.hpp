@@ -480,7 +480,7 @@ public:
     if (is_empty()) [[unlikely]] { empty_list(); }
     sh_ptr it       = { m_head };
     sh_ptr temp     = {};
-    while ( it != nullptr ) {;
+    while ( it != nullptr ) {
       temp = it->m_next;
       it.reset();
       it = temp;
@@ -488,7 +488,6 @@ public:
     m_head.reset();
     m_tail.reset();
   }
-
 }; // end of class List_<T>
 
 #endif // LIST_HPP
