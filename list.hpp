@@ -2,7 +2,7 @@
 * @file list.hpp
 * @author yahya mohammed ( goldroger.1993@outlook.com )
 * @brief a singly linked list with modern c++
-* @version 1.5
+* @version 2.0
 * @date 2021-04-28
 * @license MIT License 2021
 */
@@ -18,11 +18,14 @@
 #include <iostream>
 #include <memory>
 
-inline auto empty_list() ->bool {
-  throw std::runtime_error("--list is empty...");
+inline auto empty_list() -> bool {
+  std::cerr << "-- list is empty...";
+  throw 1;
 }
 
-template <typename T> class List_ {
+template <typename T>
+class List_
+{
   class Node {
   public:
     T m_data = {};
@@ -37,16 +40,50 @@ private:
   sh_ptr      m_head = {nullptr};
   sh_ptr      m_tail = {nullptr};
   std::size_t m_size = {};
+public:
+  /** iterator test */
+  class iterator {
+  private:
+    sh_ptr node_ptr {nullptr};
+  public:
+    iterator(const sh_ptr& newPtr) : node_ptr(newPtr) {}
+    iterator(std::nullptr_t newPtr) : node_ptr(newPtr) {}
+    bool operator!=(const iterator& itr) const {
+      return node_ptr != itr.node_ptr;
+    }
+    //
+    T& operator*() const {
+      return node_ptr->m_data;
+    }
+    // pre increment
+    iterator operator++() {
+      node_ptr = node_ptr->m_next;
+      return *this;
+    }
+    // post increment
+    iterator operator++(int) {
+      node_ptr = node_ptr->m_next;
+      return *this;
+    }
+  }; // end of class iterator
 
 public:
-  /* constructors */
-  List_() = default;
 
-  List_(const std::initializer_list<T> &arg) {
+  /**test methods*/
+  iterator begin()  const  { return iterator(m_head); }
+  iterator end()    const  { return iterator(nullptr); }
+
+  /* constructors */
+
+  List_() = default;
+  List_(const List_<T>& ) = delete;
+  List_(List_<T> && ) = delete;
+  //
+  constexpr List_(const std::initializer_list<T> &arg) {
     for (const auto &i : arg) { push_back(i); }
   }
 
-  List_(std::initializer_list<T> &&arg) {
+  constexpr List_(std::initializer_list<T> &&arg) {
     for (auto &&i : arg) { push_back(i); }
   }
 
@@ -73,8 +110,9 @@ public:
    * @complexity O(1)
    * @return T&
    */
-  [[nodiscard]] constexpr inline auto front() const -> T & {
-    if (is_empty()) { empty_list(); }
+  [[nodiscard]] constexpr inline auto front() const -> T &
+  {
+    if (is_empty()) [[unlikely]] { empty_list(); }
     return m_head->m_data;
   }
 
@@ -85,7 +123,7 @@ public:
    */
   [[nodiscard]] constexpr inline auto back() const -> T &
   {
-    if (is_empty()) { empty_list(); }
+    if (is_empty())  { empty_list(); }
     return m_tail->m_data;
   }
 
@@ -109,7 +147,7 @@ public:
   */
   [[nodiscard]] constexpr auto at(const std::size_t times) const -> auto &
   {
-    if (is_empty())                   { empty_list(); }
+    if (is_empty()) [[unlikely]]      { empty_list(); }
     if (times < 0 || times >= size()) { empty_list(); }
     sh_ptr it{m_head};
     for (std::size_t i = 0; i < times; ++i) {
@@ -128,13 +166,13 @@ public:
   * @complexity O(1)
   * @param arg
   */
-  auto push_back(const T &arg) -> void
+  constexpr auto push_back(const T &arg) -> void
   {
     sh_ptr new_node   = allocate_node();
     new_node->m_data  = arg;
     new_node->m_next  = nullptr;
     //
-    if (is_empty()) {
+    if (is_empty()) [[unlikely]] {
       m_head = new_node; // |0, null|
       m_tail = new_node; // |0, null|
     }
@@ -146,13 +184,13 @@ public:
     ++m_size;
   }
 
-  auto push_back(T &&arg) -> void
+  constexpr auto push_back(T &&arg) -> void
   {
     sh_ptr new_node   = allocate_node();
     new_node->m_data  = arg;
     new_node->m_next  = nullptr;
     //
-    if (is_empty()) {
+    if (is_empty()) [[unlikely]] {
       m_head = new_node; // |0, null|
       m_tail = new_node; // |0, null|
     }
@@ -201,11 +239,11 @@ public:
   * @param pos
   * @param arg
   */
-  auto push_at(const std::size_t pos, const T &arg) -> void
+  inline auto push_at(const std::size_t pos, const T &arg) -> void
   {
-    if (is_empty())       { empty_list(); }
-    if (pos == 0)         { push_front(arg); }
-    if (pos == size()-1)  { push_back(arg); }
+    if (is_empty())  [[unlikely]]     { empty_list(); }
+    if (pos == 0)                     { push_front(arg); }
+    if (pos == size()-1)              { push_back(arg); }
     /* adding nodes between previous and next */
     sh_ptr prev_node  = allocate_node(); // hold previous node
     sh_ptr new_node   = allocate_node(); // hold new node
@@ -224,9 +262,9 @@ public:
 
   auto push_at(const std::size_t pos, T &&arg) -> void
   {
-    if (is_empty())       { empty_list(); }
-    if (pos == 0)         { push_front(arg); }
-    if (pos == size()-1)  { push_back(arg); }
+    if (is_empty()) [[unlikely]]  { empty_list(); }
+    if (pos == 0)                 { push_front(arg); }
+    if (pos == size()-1)          { push_back(arg); }
     /* adding nodes between previous and next */
     sh_ptr prev_node  = allocate_node(); // hold previous node
     sh_ptr new_node   = allocate_node(); // hold new node
@@ -248,7 +286,7 @@ public:
   */
   auto pop_back() -> void
   {
-    if (is_empty()) { empty_list(); }
+    if (is_empty()) [[unlikely]] { empty_list(); }
     //
     sh_ptr last   = {m_head};
     while (last->m_next->m_next != nullptr) {
@@ -267,7 +305,7 @@ public:
   */
   auto pop_front() -> void
   {
-    if (is_empty()) { empty_list(); }
+    if (is_empty()) [[unlikely]] { empty_list(); }
     //
     sh_ptr first  = {m_head}; // first points to old head
     m_head        = m_head->m_next; // head points to one step ahead of old head
@@ -284,7 +322,7 @@ public:
   {
     const std::size_t s = size();
     if (pos < 0 || pos >= s)  { empty_list(); }
-    if (is_empty())           { empty_list(); }
+    if (is_empty()) [[unlikely]] { empty_list(); }
     if (pos == 0)             { pop_front(); return; }
     else if ( pos == s-1)     { pop_back(); return; }
     //
@@ -311,9 +349,9 @@ public:
   */
   auto split(List_<T> &l1, List_<T> &l2) -> void
   {
-    if (is_empty()) { empty_list(); }
-    const auto& s = size();
-    sh_ptr it = { m_head };
+    if (is_empty()) [[unlikely]] { empty_list(); }
+    const auto& s   = size();
+    sh_ptr      it  = { m_head };
     for (std::size_t i = 0; i < (s/2); ++i, it = it->m_next) {
       l1.push_back( at(it) );
     }
@@ -330,8 +368,8 @@ public:
   */
   auto merge( List_<T>& l1,  List_<T>& l2) -> void
   {
-    if (l1.is_empty()) { empty_list(); }
-    if (l2.is_empty()) { empty_list(); }
+    if (l1.is_empty()) [[unlikely]] { empty_list(); }
+    if (l2.is_empty()) [[unlikely]] { empty_list(); }
     sh_ptr it_l1       = { l1.m_head };
     for (std::size_t i = 0; i < l1.size(); ++i, it_l1 = it_l1->m_next) {
       push_back( l1.at(it_l1) );
@@ -348,7 +386,7 @@ public:
   */
   constexpr auto sort(bool desc = false) const -> void
   {
-    if ( is_empty() ) { empty_list(); }
+    if (is_empty()) [[unlikely]] { empty_list(); }
     bool sorted   = true;
     sh_ptr curr   = {};
     sh_ptr next   = {};
@@ -388,7 +426,7 @@ public:
   */
   [[nodiscard]] constexpr auto is_sorted() const -> bool
   {
-    if ( is_empty() ) { empty_list(); }
+    if ( is_empty() ) [[unlikely]] { empty_list(); }
     bool check  = false;
     sh_ptr it   = {m_head};
     while ( it->m_next != nullptr ) {
@@ -409,7 +447,7 @@ public:
   */
   [[nodiscard]] constexpr auto search(const T & target) const -> bool
   {
-    if (is_empty())   { empty_list(); }
+    if (is_empty()) [[unlikely]] { empty_list(); }
     sh_ptr it        ={ m_head };
     for (std::size_t i = 0; i < size(); ++i, it = it->m_next) {
       if ( at(it) == target ) { return true; }
@@ -425,7 +463,7 @@ public:
   */
   [[nodiscard]] constexpr auto locate(const T& target) const -> std::size_t
   {
-    if (is_empty()) { empty_list(); }
+    if (is_empty()) [[unlikely]] { empty_list(); }
     sh_ptr  it      = {m_head};
     for (std::size_t i = 0; i < size(); ++i, it = it->m_next) {
       if ( at(it) == target ) { return i; }
@@ -439,7 +477,7 @@ public:
   */
   auto clear() -> void
   {
-    if (is_empty())   { empty_list(); }
+    if (is_empty()) [[unlikely]] { empty_list(); }
     sh_ptr it       = { m_head };
     sh_ptr temp     = {};
     while ( it != nullptr ) {;
