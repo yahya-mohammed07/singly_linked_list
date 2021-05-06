@@ -70,8 +70,8 @@ public:
 public:
 
   /**test methods*/
-  iterator begin()  const  { return iterator(m_head); }
-  iterator end()    const  { return iterator(nullptr); }
+  [[nodiscard]] constexpr iterator begin()  const  { return iterator(m_head); }
+  [[nodiscard]] constexpr iterator end()    const  { return iterator(nullptr); }
 
   /* constructors */
 
