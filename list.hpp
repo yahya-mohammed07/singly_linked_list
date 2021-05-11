@@ -207,7 +207,7 @@ public:
   * @complexity O(1)
   * @param arg
   */
-  auto push_front(const T &arg) -> void
+  constexpr auto push_front(const T &arg) -> void
   {
     sh_ptr new_node   = allocate_node();
     new_node->m_data  = arg;
@@ -223,7 +223,7 @@ public:
   * @complexity O(1)
   * @param arg
   */
-  auto push_front(T &&arg) -> void
+  constexpr auto push_front(T &&arg) -> void
   {
     sh_ptr new_node   = allocate_node();
     new_node->m_data  = arg;
@@ -287,6 +287,7 @@ public:
   auto pop_back() -> void
   {
     if (is_empty()) [[unlikely]] { empty_list(); }
+    if (size() == 1)             { m_head.reset(); return; } // if one node created
     //
     sh_ptr last   = {m_head};
     while (last->m_next->m_next != nullptr) {
@@ -306,6 +307,8 @@ public:
   auto pop_front() -> void
   {
     if (is_empty()) [[unlikely]] { empty_list(); }
+    if (size() == 1)             { m_head.reset(); return; } // if one node created
+
     //
     sh_ptr first  = {m_head}; // first points to old head
     m_head        = m_head->m_next; // head points to one step ahead of old head
