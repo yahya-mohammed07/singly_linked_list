@@ -78,21 +78,21 @@ public:
   List_() = default;
 
   //
-  explicit constexpr List_(const List_<T>& lh) {
-    m_head = lh.m_head;
-    m_tail = lh.m_tail;
-    m_size = lh.m_size;
+  explicit constexpr List_(const List_<T>& other) {
+    m_head = other.m_head;
+    m_tail = other.m_tail;
+    m_size = other.m_size;
   }
 
   //
-  explicit constexpr List_(List_<T> && lh) : m_head(nullptr), m_tail(nullptr), m_size(0) {
-    m_head = lh.m_head;
-    m_tail = lh.m_tail;
-    m_size = lh.m_size;
+  explicit constexpr List_(List_<T> && other) : m_head(nullptr), m_tail(nullptr), m_size(0) {
+    m_head = other.m_head;
+    m_tail = other.m_tail;
+    m_size = other.m_size;
     //
-    lh.m_tail = {nullptr};
-    lh.m_head = {nullptr};
-    lh.m_size = {};
+    other.m_tail = {nullptr};
+    other.m_head = {nullptr};
+    other.m_size = {};
   }
 
   //
@@ -107,24 +107,24 @@ public:
 
   /* operators test */
 
-  List_<T>& operator=(const List_<T>& lh) {
-    if (this != &lh) {
-      m_head = lh.m_head;
-      m_tail = lh.m_tail;
-      m_size = lh.m_size;
+  List_<T>& operator=(const List_<T>& other) {
+    if (this != &other) {
+      m_head = other.m_head;
+      m_tail = other.m_tail;
+      m_size = other.m_size;
     }
     return *this;
   }
 
-  List_<T>& operator=(List_<T>&& lh) {
-    if (this != &lh) {
-      m_head = lh.m_head;
-      m_tail = lh.m_tail;
-      m_size = lh.m_size;
+  List_<T>& operator=(List_<T>&& other) {
+    if (this != &other) {
+      m_head = other.m_head;
+      m_tail = other.m_tail;
+      m_size = other.m_size;
       //
-      lh.m_tail = {nullptr};
-      lh.m_head = {nullptr};
-      lh.m_size = {};
+      other.m_tail = {nullptr};
+      other.m_head = {nullptr};
+      other.m_size = {};
     }
     return *this;
   }
