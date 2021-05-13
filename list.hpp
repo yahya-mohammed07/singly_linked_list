@@ -2,7 +2,7 @@
 * @file list.hpp
 * @author yahya mohammed ( goldroger.1993@outlook.com )
 * @brief a singly linked list with modern c++
-* @version 2.0
+* @version 2
 * @date 2021-04-28
 * @license MIT License 2021
 */
@@ -13,12 +13,13 @@
 #define XORSWAP(a, b) ((a) ^= (b), (b) ^= (a), (a) ^= (b))
 #define MYSWAP(a, b) (&(a) == &b) ? a : XORSWAP(a, b)
 
+#include <vector>
 #include <exception>
 #include <initializer_list>
 #include <iostream>
 #include <memory>
 
-inline auto empty_list() -> bool {
+[[noreturn]] inline auto empty_list() -> void {
   std::cerr << "-- list is empty...";
   throw 1;
 }
@@ -35,19 +36,20 @@ class List_
 private:
 
   using sh_ptr = std::shared_ptr<Node>;
-  sh_ptr allocate_node() { return std::make_shared<Node>(); }
+  sh_ptr allocate_node() noexcept { return std::make_shared<Node>(); }
 
   sh_ptr      m_head = {nullptr};
   sh_ptr      m_tail = {nullptr};
   std::size_t m_size = {};
-public:
-  /** iterator test */
+private:
+
   class iterator {
   private:
     sh_ptr node_ptr {nullptr};
   public:
-    iterator(const sh_ptr& newPtr) : node_ptr(newPtr) {}
+    iterator(const sh_ptr& newPtr)  : node_ptr(newPtr) {}
     iterator(std::nullptr_t newPtr) : node_ptr(newPtr) {}
+    //
     bool operator!=(const iterator& itr) const {
       return node_ptr != itr.node_ptr;
     }
@@ -69,47 +71,88 @@ public:
 
 public:
 
-  /**test methods*/
-  [[nodiscard]] constexpr iterator begin()  const  { return iterator(m_head); }
-  [[nodiscard]] constexpr iterator end()    const  { return iterator(nullptr); }
+  [[nodiscard]] constexpr auto begin()  const noexcept -> iterator { return iterator(m_head); }
+  [[nodiscard]] constexpr auto end()    const noexcept -> iterator { return iterator(nullptr); }
 
   /* constructors */
-
   List_() = default;
-  List_(const List_<T>& ) = delete;
-  List_(List_<T> && ) = delete;
+
   //
-  constexpr List_(const std::initializer_list<T> &arg) {
+  explicit constexpr List_(const List_<T>& lh) {
+    m_head = lh.m_head;
+    m_tail = lh.m_tail;
+    m_size = lh.m_size;
+  }
+
+  //
+  explicit constexpr List_(List_<T> && lh) : m_head(nullptr), m_tail(nullptr), m_size(0) {
+    m_head = lh.m_head;
+    m_tail = lh.m_tail;
+    m_size = lh.m_size;
+    //
+    lh.m_tail = {nullptr};
+    lh.m_head = {nullptr};
+    lh.m_size = {};
+  }
+
+  //
+  explicit constexpr List_(const std::initializer_list<T> &arg) noexcept {
     for (const auto &i : arg) { push_back(i); }
   }
 
-  constexpr List_(std::initializer_list<T> &&arg) {
+  //
+  explicit constexpr List_(std::initializer_list<T> &&arg) noexcept {
     for (auto &&i : arg) { push_back(i); }
+  }
+
+  /* operators test */
+
+  List_<T>& operator=(const List_<T>& lh) {
+    if (this != &lh) {
+      m_head = lh.m_head;
+      m_tail = lh.m_tail;
+      m_size = lh.m_size;
+    }
+    return *this;
+  }
+
+  List_<T>& operator=(List_<T>&& lh) {
+    if (this != &lh) {
+      m_head = lh.m_head;
+      m_tail = lh.m_tail;
+      m_size = lh.m_size;
+      //
+      lh.m_tail = {nullptr};
+      lh.m_head = {nullptr};
+      lh.m_size = {};
+    }
+    return *this;
   }
 
   /*@ methods: */
   /**
-   * @brief check if list is empty
-   * @complexity O(1)
-   * @return true
-   * @return false
-   */
-  [[nodiscard]] constexpr inline auto is_empty() const -> bool {
+  * @brief check if list is empty
+  * @complexity O(1)
+  * @return true
+  * @return false
+  */
+  [[nodiscard]] constexpr inline auto is_empty() const noexcept -> bool
+  {
     return m_head == nullptr ? true : false;
   }
 
   /**
-   * @brief returns size of the list
-   * @complexity O(1)
-   * @return std::size_t
-   */
-  [[nodiscard]] constexpr inline auto size() const -> std::size_t { return m_size; }
+  * @brief returns size of the list
+  * @complexity O(1)
+  * @return std::size_t
+  */
+  [[nodiscard]] constexpr inline auto size() const noexcept -> std::size_t { return m_size; }
 
   /**
-   * @brief returns first element
-   * @complexity O(1)
-   * @return T&
-   */
+  * @brief returns first element
+  * @complexity O(1)
+  * @return T&
+  */
   [[nodiscard]] constexpr inline auto front() const -> T &
   {
     if (is_empty()) [[unlikely]] { empty_list(); }
@@ -117,26 +160,20 @@ public:
   }
 
   /**
-   * @brief return last element&
-   * @complexity O(1)
-   * @return T&
-   */
+  * @brief return last element&
+  * @complexity O(1)
+  * @return T&
+  */
   [[nodiscard]] constexpr inline auto back() const -> T &
   {
-    if (is_empty())  { empty_list(); }
+    if (is_empty()) [[unlikely]] { empty_list(); }
     return m_tail->m_data;
   }
 
   auto print() const -> void
   {
-    if (!is_empty()) {
-      sh_ptr it{};
-      for (it = m_head; it != nullptr; it = it->m_next) {
-        std::cout << it->m_data << ' ';
-      }
-      return;
-    }
-    empty_list();
+    if (is_empty()) [[unlikely]]  { empty_list(); }
+    for ( const auto& i : *this ) { std::cout << i << ' '; }
   }
 
   /**
@@ -149,11 +186,9 @@ public:
   {
     if (is_empty()) [[unlikely]]      { empty_list(); }
     if (times < 0 || times >= size()) { empty_list(); }
-    sh_ptr it{m_head};
-    for (std::size_t i = 0; i < times; ++i) {
-      it = it->m_next;
-    }
-    return it->m_data;
+    auto it = begin();
+    for (std::size_t i = 0; i < times; ++i) { ++it; }
+    return *it;
   }
 
   [[nodiscard]] constexpr inline auto at(const sh_ptr& ptr) const -> auto &
@@ -172,7 +207,7 @@ public:
     new_node->m_data  = arg;
     new_node->m_next  = nullptr;
     //
-    if (is_empty()) [[unlikely]] {
+    if (is_empty()) {
       m_head = new_node; // |0, null|
       m_tail = new_node; // |0, null|
     }
@@ -207,7 +242,7 @@ public:
   * @complexity O(1)
   * @param arg
   */
-  constexpr auto push_front(const T &arg) -> void
+  inline constexpr auto push_front(const T &arg) -> void
   {
     sh_ptr new_node   = allocate_node();
     new_node->m_data  = arg;
@@ -223,7 +258,7 @@ public:
   * @complexity O(1)
   * @param arg
   */
-  constexpr auto push_front(T &&arg) -> void
+  inline constexpr auto push_front(T &&arg) -> void
   {
     sh_ptr new_node   = allocate_node();
     new_node->m_data  = arg;
@@ -306,9 +341,8 @@ public:
   */
   auto pop_front() -> void
   {
-    if (is_empty()) [[unlikely]] { empty_list(); }
-    if (size() == 1)             { m_head.reset(); return; } // if one node created
-
+    if (is_empty()) [[unlikely]]  { empty_list(); }
+    if (size() == 1)              { m_head.reset(); return; } // if one node created
     //
     sh_ptr first  = {m_head}; // first points to old head
     m_head        = m_head->m_next; // head points to one step ahead of old head
@@ -324,10 +358,10 @@ public:
   auto pop_at(const std::size_t pos) -> void
   {
     const std::size_t s = size();
-    if (pos < 0 || pos >= s)  { empty_list(); }
-    if (is_empty()) [[unlikely]] { empty_list(); }
-    if (pos == 0)             { pop_front(); return; }
-    else if ( pos == s-1)     { pop_back(); return; }
+    if (pos < 0 || pos >= s)      { empty_list(); }
+    if (is_empty()) [[unlikely]]  { empty_list(); }
+    if (pos == 0)                 { pop_front(); return; }
+    else if ( pos == s-1)         { pop_back(); return; }
     //
     sh_ptr prev = allocate_node();
     sh_ptr next = m_head;
@@ -373,14 +407,8 @@ public:
   {
     if (l1.is_empty()) [[unlikely]] { empty_list(); }
     if (l2.is_empty()) [[unlikely]] { empty_list(); }
-    sh_ptr it_l1       = { l1.m_head };
-    for (std::size_t i = 0; i < l1.size(); ++i, it_l1 = it_l1->m_next) {
-      push_back( l1.at(it_l1) );
-    }
-    sh_ptr it_l2       = { l2.m_head };
-    for (std::size_t i = 0; i < l2.size(); ++i, it_l2 = it_l2->m_next) {
-      push_back( l2.at(it_l2) );
-    }
+    for ( const auto& i : l1 ) { push_back(i); }
+    for ( const auto& i : l2 ) { push_back(i); }
   }
 
   /**
@@ -451,15 +479,14 @@ public:
   [[nodiscard]] constexpr auto search(const T & target) const -> bool
   {
     if (is_empty()) [[unlikely]] { empty_list(); }
-    sh_ptr it        ={ m_head };
-    for (std::size_t i = 0; i < size(); ++i, it = it->m_next) {
-      if ( at(it) == target ) { return true; }
+    for (const auto& i : *this) {
+      if ( i == target ) { return true; }
     }
     return false;
   }
 
   /**
-  * @brief returns the loacation of that node containinng target
+  * @brief returns the loacation of that node containinng target, count from the ritgh to left
   * @conplexity O(n)
   * @param target
   * @return std::int64_t
