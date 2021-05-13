@@ -80,11 +80,11 @@ public:
   List_(List_<T> && ) = delete;
   //
   constexpr List_(const std::initializer_list<T> &arg) {
-    for (const auto &i : arg) { push_front(i); }
+    for (const auto &i : arg) { push_back(i); }
   }
 
   constexpr List_(std::initializer_list<T> &&arg) {
-    for (auto &&i : arg) { push_front(i); }
+    for (auto &&i : arg) { push_back(i); }
   }
 
   /*@ methods: */
@@ -166,7 +166,7 @@ public:
   * @complexity O(1)
   * @param arg
   */
-  [[deprecated("- you should use `push_front()` insteed")]] constexpr auto push_back(const T &arg) -> void
+  constexpr auto push_back(const T &arg) -> void
   {
     sh_ptr new_node   = allocate_node();
     new_node->m_data  = arg;
@@ -184,7 +184,7 @@ public:
     ++m_size;
   }
 
-  [[deprecated("- you should use `push_front()` insteed")]] constexpr auto push_back(T &&arg) -> void
+  constexpr auto push_back(T &&arg) -> void
   {
     sh_ptr new_node   = allocate_node();
     new_node->m_data  = arg;
