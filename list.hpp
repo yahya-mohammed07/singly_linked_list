@@ -80,11 +80,11 @@ public:
   List_(List_<T> && ) = delete;
   //
   constexpr List_(const std::initializer_list<T> &arg) {
-    for (const auto &i : arg) { push_back(i); }
+    for (const auto &i : arg) { push_front(i); }
   }
 
   constexpr List_(std::initializer_list<T> &&arg) {
-    for (auto &&i : arg) { push_back(i); }
+    for (auto &&i : arg) { push_front(i); }
   }
 
   /*@ methods: */
@@ -166,7 +166,7 @@ public:
   * @complexity O(1)
   * @param arg
   */
-  constexpr auto push_back(const T &arg) -> void
+  [[deprecated("- you should use `push_front()` insteed")]] constexpr auto push_back(const T &arg) -> void
   {
     sh_ptr new_node   = allocate_node();
     new_node->m_data  = arg;
@@ -184,7 +184,7 @@ public:
     ++m_size;
   }
 
-  constexpr auto push_back(T &&arg) -> void
+  [[deprecated("- you should use `push_front()` insteed")]] constexpr auto push_back(T &&arg) -> void
   {
     sh_ptr new_node   = allocate_node();
     new_node->m_data  = arg;
@@ -462,16 +462,16 @@ public:
   * @brief returns the loacation of that node containinng target
   * @conplexity O(n)
   * @param target
-  * @return std::size_t
+  * @return std::int64_t
   */
-  [[nodiscard]] constexpr auto locate(const T& target) const -> std::size_t
+  [[nodiscard]] constexpr auto locate(const T& target) const -> std::int64_t
   {
     if (is_empty()) [[unlikely]] { empty_list(); }
-    sh_ptr  it      = {m_head};
-    for (std::size_t i = 0; i < size(); ++i, it = it->m_next) {
-      if ( at(it) == target ) { return i; }
+    for (std::size_t j = 0; const auto& i : *this ) {
+      if ( i == target ) { return static_cast<std::int64_t>(j); }
+      ++j;
     }
-    return {};
+    return -1;
   }
 
   /**
