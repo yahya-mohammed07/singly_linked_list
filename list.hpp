@@ -2,7 +2,7 @@
 * @file list.hpp
 * @author yahya mohammed ( goldroger.1993@outlook.com )
 * @brief a singly linked list with modern c++
-* @version 2
+* @version 2.3.1
 * @date 2021-04-28
 * @license MIT License 2021
 */
@@ -13,16 +13,14 @@
 #define XORSWAP(a, b) ((a) ^= (b), (b) ^= (a), (a) ^= (b))
 #define MYSWAP(a, b) (&(a) == &b) ? a : XORSWAP(a, b)
 
-#include <vector>
-#include <exception>
 #include <initializer_list>
 #include <iostream>
 #include <memory>
 
-[[noreturn]] inline auto empty_list() -> void {
-  std::cerr << "-- list is empty...";
-  throw 1;
-}
+
+constexpr auto empty_list = []() -> void {
+  std::cerr << "- list is empty...";
+};
 
 template <typename T>
 class List_
@@ -41,6 +39,10 @@ private:
   sh_ptr      m_head = {nullptr};
   sh_ptr      m_tail = {nullptr};
   std::size_t m_size = {};
+
+protected:
+  T _faild_ = {};
+
 private:
 
   class iterator {
@@ -75,56 +77,67 @@ public:
   [[nodiscard]] constexpr auto end()    const noexcept -> iterator { return iterator(nullptr); }
 
   /* constructors */
-  List_() = default;
-
+  List_() noexcept = default;
   //
-  explicit constexpr List_(const List_<T>& other) {
-    m_head = other.m_head;
-    m_tail = other.m_tail;
-    m_size = other.m_size;
-  }
-
-  //
-  explicit constexpr List_(List_<T> && other) : m_head(nullptr), m_tail(nullptr), m_size(0) {
-    m_head = other.m_head;
-    m_tail = other.m_tail;
-    m_size = other.m_size;
+  explicit constexpr List_(List_<T> && lh) noexcept
+    : m_head(nullptr), m_tail(nullptr), m_size(0) {
+    m_head = lh.m_head;
+    m_tail = lh.m_tail;
+    m_size = lh.m_size;
     //
-    other.m_tail = {nullptr};
-    other.m_head = {nullptr};
-    other.m_size = {};
+    lh.m_tail.reset();
+    lh.m_head.reset();
+    lh.m_size = {};
+  }
+  //
+  explicit constexpr List_(const List_<T>& lh) noexcept {
+    m_head = lh.m_head;
+    m_tail = lh.m_tail;
+    m_size = lh.m_size;
   }
 
   //
-  explicit constexpr List_(const std::initializer_list<T> &arg) noexcept {
+  template<typename ...args>
+  explicit constexpr List_(const args& ...arg) {
+    (push_back(arg),...);
+  }
+
+  //
+  template<typename ...args>
+  explicit constexpr List_(args&& ...arg) {
+    (push_back(arg),...);
+  }
+
+  //
+  explicit constexpr List_(std::initializer_list<T> &&arg) {
+    for (auto &&i : arg) { push_back(i); }
+  }
+
+  //
+  explicit constexpr List_(const std::initializer_list<T> &arg) {
     for (const auto &i : arg) { push_back(i); }
   }
 
   //
-  explicit constexpr List_(std::initializer_list<T> &&arg) noexcept {
-    for (auto &&i : arg) { push_back(i); }
-  }
-
-  /* operators test */
-
-  List_<T>& operator=(const List_<T>& other) {
-    if (this != &other) {
-      m_head = other.m_head;
-      m_tail = other.m_tail;
-      m_size = other.m_size;
+  constexpr List_<T>& operator=(const List_<T>& lh) noexcept {
+    if (this != &lh) {
+      m_head = lh.m_head;
+      m_tail = lh.m_tail;
+      m_size = lh.m_size;
     }
     return *this;
   }
 
-  List_<T>& operator=(List_<T>&& other) {
-    if (this != &other) {
-      m_head = other.m_head;
-      m_tail = other.m_tail;
-      m_size = other.m_size;
+  //
+  constexpr List_<T>& operator=(List_<T>&& lh) noexcept {
+    if (this != &lh) {
+      m_head = lh.m_head;
+      m_tail = lh.m_tail;
+      m_size = lh.m_size;
       //
-      other.m_tail = {nullptr};
-      other.m_head = {nullptr};
-      other.m_size = {};
+      lh.m_tail = {nullptr};
+      lh.m_head = {nullptr};
+      lh.m_size = {};
     }
     return *this;
   }
@@ -153,9 +166,9 @@ public:
   * @complexity O(1)
   * @return T&
   */
-  [[nodiscard]] constexpr inline auto front() const -> T &
+  [[nodiscard]] constexpr inline auto front() -> T &
   {
-    if (is_empty()) [[unlikely]] { empty_list(); }
+    if (is_empty()) [[unlikely]] { empty_list(); return _faild_; }
     return m_head->m_data;
   }
 
@@ -164,15 +177,15 @@ public:
   * @complexity O(1)
   * @return T&
   */
-  [[nodiscard]] constexpr inline auto back() const -> T &
+  [[nodiscard]] constexpr inline auto back()  -> T &
   {
-    if (is_empty()) [[unlikely]] { empty_list(); }
+    if (is_empty()) [[unlikely]] { empty_list(); return _faild_;}
     return m_tail->m_data;
   }
 
   auto print() const -> void
   {
-    if (is_empty()) [[unlikely]]  { empty_list(); }
+    if (is_empty()) [[unlikely]]  { empty_list(); return; }
     for ( const auto& i : *this ) { std::cout << i << ' '; }
   }
 
@@ -182,18 +195,37 @@ public:
   * @param times
   * @return auto&
   */
-  [[nodiscard]] constexpr auto at(const std::size_t times) const -> auto &
+  [[nodiscard]] constexpr auto at(const std::size_t times)  -> auto &
   {
-    if (is_empty()) [[unlikely]]      { empty_list(); }
-    if (times < 0 || times >= size()) { empty_list(); }
+    if (is_empty()) [[unlikely]]      { empty_list(); return _faild_;}
+    if (times < 0 || times >= size()) { empty_list(); return _faild_;}
     auto it = begin();
     for (std::size_t i = 0; i < times; ++i) { ++it; }
-    return *it;
+    return (*it);
   }
 
   [[nodiscard]] constexpr inline auto at(const sh_ptr& ptr) const -> auto &
   {
     return ptr->m_data;
+  }
+
+  //
+  constexpr auto push_back(T &&arg) -> void
+  {
+    sh_ptr new_node   = allocate_node();
+    new_node->m_data  = arg;
+    new_node->m_next  = nullptr;
+    //
+    if (is_empty()) [[unlikely]] {
+      m_head = new_node; // |0, null|
+      m_tail = new_node; // |0, null|
+    }
+    m_tail->m_next = new_node; // changes head-> next too, then it changes
+    // the previous temps next
+    // head ->|0, 0x1| -> |1, 0x2| -> |2, null|
+    m_tail = new_node; // now tail points to temp
+    //
+    ++m_size;
   }
 
   /**
@@ -219,22 +251,11 @@ public:
     ++m_size;
   }
 
-  constexpr auto push_back(T &&arg) -> void
+  //
+  template<typename ...args>
+  inline constexpr auto push_back(const args&...arg) -> void
   {
-    sh_ptr new_node   = allocate_node();
-    new_node->m_data  = arg;
-    new_node->m_next  = nullptr;
-    //
-    if (is_empty()) [[unlikely]] {
-      m_head = new_node; // |0, null|
-      m_tail = new_node; // |0, null|
-    }
-    m_tail->m_next = new_node; // changes head-> next too, then it changes
-    // the previous temps next
-    // head ->|0, 0x1| -> |1, 0x2| -> |2, null|
-    m_tail = new_node; // now tail points to temp
-    //
-    ++m_size;
+    (push_back(arg),...);
   }
 
   /**
@@ -268,6 +289,13 @@ public:
     //
     ++m_size;
   }
+
+  //
+  inline constexpr auto push_front(const auto& ...arg) -> void {
+    (push_front(arg), ...);
+  }
+
+
   /**
   * @brief add element at given position
   * @complexity O(n)
@@ -276,7 +304,7 @@ public:
   */
   inline auto push_at(const std::size_t pos, const T &arg) -> void
   {
-    if (is_empty())  [[unlikely]]     { empty_list(); }
+    if (is_empty())  [[unlikely]]     { empty_list(); return; }
     if (pos == 0)                     { push_front(arg); }
     if (pos == size()-1)              { push_back(arg); }
     /* adding nodes between previous and next */
@@ -297,7 +325,7 @@ public:
 
   auto push_at(const std::size_t pos, T &&arg) -> void
   {
-    if (is_empty()) [[unlikely]]  { empty_list(); }
+    if (is_empty()) [[unlikely]]  { empty_list(); return; }
     if (pos == 0)                 { push_front(arg); }
     if (pos == size()-1)          { push_back(arg); }
     /* adding nodes between previous and next */
@@ -321,7 +349,7 @@ public:
   */
   auto pop_back() -> void
   {
-    if (is_empty()) [[unlikely]] { empty_list(); }
+    if (is_empty()) [[unlikely]] { empty_list(); return; }
     if (size() == 1)             { m_head.reset(); return; } // if one node created
     //
     sh_ptr last   = {m_head};
@@ -341,7 +369,7 @@ public:
   */
   auto pop_front() -> void
   {
-    if (is_empty()) [[unlikely]]  { empty_list(); }
+    if (is_empty()) [[unlikely]]  { empty_list(); return; }
     if (size() == 1)              { m_head.reset(); return; } // if one node created
     //
     sh_ptr first  = {m_head}; // first points to old head
@@ -358,8 +386,8 @@ public:
   auto pop_at(const std::size_t pos) -> void
   {
     const std::size_t s = size();
-    if (pos < 0 || pos >= s)      { empty_list(); }
-    if (is_empty()) [[unlikely]]  { empty_list(); }
+    if (pos < 0 || pos >= s)      { empty_list(); return; }
+    if (is_empty()) [[unlikely]]  { empty_list(); return; }
     if (pos == 0)                 { pop_front(); return; }
     else if ( pos == s-1)         { pop_back(); return; }
     //
@@ -386,7 +414,7 @@ public:
   */
   auto split(List_<T> &l1, List_<T> &l2) -> void
   {
-    if (is_empty()) [[unlikely]] { empty_list(); }
+    if (is_empty()) [[unlikely]] { empty_list(); return; }
     const auto& s   = size();
     sh_ptr      it  = { m_head };
     for (std::size_t i = 0; i < (s/2); ++i, it = it->m_next) {
@@ -405,8 +433,8 @@ public:
   */
   auto merge( List_<T>& l1,  List_<T>& l2) -> void
   {
-    if (l1.is_empty()) [[unlikely]] { empty_list(); }
-    if (l2.is_empty()) [[unlikely]] { empty_list(); }
+    if (l1.is_empty()) [[unlikely]] { empty_list(); return; }
+    if (l2.is_empty()) [[unlikely]] { empty_list(); return; }
     for ( const auto& i : l1 ) { push_back(i); }
     for ( const auto& i : l2 ) { push_back(i); }
   }
@@ -417,12 +445,12 @@ public:
   */
   constexpr auto sort(bool desc = false) const -> void
   {
-    if (is_empty()) [[unlikely]] { empty_list(); }
+    if (is_empty()) { empty_list(); return; }
     bool sorted   = true;
     sh_ptr curr   = {};
     sh_ptr next   = {};
     //
-    if ( !desc )  {
+    if ( !desc ) [[likely]] {
       while ( sorted ) {
         sorted   = false;
         curr     = {m_head};
@@ -457,7 +485,7 @@ public:
   */
   [[nodiscard]] constexpr auto is_sorted() const -> bool
   {
-    if ( is_empty() ) [[unlikely]] { empty_list(); }
+    if ( is_empty() ) [[unlikely]] { empty_list(); return -1; }
     bool check  = false;
     sh_ptr it   = {m_head};
     while ( it->m_next != nullptr ) {
@@ -478,7 +506,7 @@ public:
   */
   [[nodiscard]] constexpr auto search(const T & target) const -> bool
   {
-    if (is_empty()) [[unlikely]] { empty_list(); }
+    if (is_empty()) [[unlikely]] { empty_list(); return -1; }
     for (const auto& i : *this) {
       if ( i == target ) { return true; }
     }
@@ -493,7 +521,7 @@ public:
   */
   [[nodiscard]] constexpr auto locate(const T& target) const -> std::int64_t
   {
-    if (is_empty()) [[unlikely]] { empty_list(); }
+    if (is_empty()) [[unlikely]] { empty_list(); return -1; }
     for (std::size_t j = 0; const auto& i : *this ) {
       if ( i == target ) { return static_cast<std::int64_t>(j); }
       ++j;
@@ -507,16 +535,18 @@ public:
   */
   auto clear() -> void
   {
-    if (is_empty()) [[unlikely]] { empty_list(); }
-    sh_ptr it       = { m_head };
+    if (is_empty()) [[unlikely]] { empty_list(); return; }
+    sh_ptr it = m_head;
     sh_ptr temp     = {};
     while ( it != nullptr ) {
       temp = it->m_next;
-      it.reset();
+      it = nullptr;
       it = temp;
     }
     m_head.reset();
     m_tail.reset();
+    it.reset();
+    m_size = {};
   }
 }; // end of class List_<T>
 
