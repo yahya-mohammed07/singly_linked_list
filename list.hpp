@@ -2,9 +2,7 @@
 * @file list.hpp
 * @author yahya mohammed ( goldroger.1993@outlook.com )
 * @brief a singly linked list with modern c++
-* @version 2.3.1
-* @date 2021-04-28
-* @license MIT License 2021
+* @date 2021-04-28 ("date started")
 */
 
 #ifndef LIST_HPP
@@ -34,20 +32,21 @@ class List_
 private:
 
   using sh_ptr = std::shared_ptr<Node>;
-  sh_ptr allocate_node() noexcept { return std::make_shared<Node>(); }
+  constexpr sh_ptr allocate_node() const noexcept { return std::make_shared<Node>(); }
 
   sh_ptr      m_head = {nullptr};
   sh_ptr      m_tail = {nullptr};
   std::size_t m_size = {};
 
 protected:
-  T _faild_ = {};
+  T _failed_ = {};
 
 private:
 
   class iterator {
   private:
     sh_ptr node_ptr {nullptr};
+    //
   public:
     iterator(const sh_ptr& newPtr)  : node_ptr(newPtr) {}
     iterator(std::nullptr_t newPtr) : node_ptr(newPtr) {}
@@ -168,7 +167,7 @@ public:
   */
   [[nodiscard]] constexpr inline auto front() -> T &
   {
-    if (is_empty()) [[unlikely]] { empty_list(); return _faild_; }
+    if (is_empty()) [[unlikely]] { empty_list(); return _failed_; }
     return m_head->m_data;
   }
 
@@ -179,7 +178,7 @@ public:
   */
   [[nodiscard]] constexpr inline auto back()  -> T &
   {
-    if (is_empty()) [[unlikely]] { empty_list(); return _faild_;}
+    if (is_empty()) [[unlikely]] { empty_list(); return _failed_;}
     return m_tail->m_data;
   }
 
@@ -197,8 +196,8 @@ public:
   */
   [[nodiscard]] constexpr auto at(const std::size_t times)  -> auto &
   {
-    if (is_empty()) [[unlikely]]      { empty_list(); return _faild_;}
-    if (times < 0 || times >= size()) { empty_list(); return _faild_;}
+    if (is_empty()) [[unlikely]]      { empty_list(); return _failed_;}
+    if (times < 0 || times >= size()) { empty_list(); return _failed_;}
     auto it = begin();
     for (std::size_t i = 0; i < times; ++i) { ++it; }
     return (*it);
@@ -209,7 +208,11 @@ public:
     return ptr->m_data;
   }
 
-  //
+  /**
+  * @brief add element at end of list
+  * @complexity O(1)
+  * @param arg
+  */
   constexpr auto push_back(T &&arg) -> void
   {
     sh_ptr new_node   = allocate_node();
@@ -258,6 +261,12 @@ public:
     (push_back(arg),...);
   }
 
+  /** @fixme: causes seg fault*/
+  /*inline constexpr auto push_back(auto &&...arg) -> void
+  {
+    (push_back(arg),...);
+  }*/
+
   /**
   * @brief add element at the beginning of list
   * @complexity O(1)
@@ -295,14 +304,13 @@ public:
     (push_front(arg), ...);
   }
 
-
   /**
   * @brief add element at given position
   * @complexity O(n)
   * @param pos
   * @param arg
   */
-  inline auto push_at(const std::size_t pos, const T &arg) -> void
+  constexpr auto push_at(const std::size_t pos, const T &arg) -> void
   {
     if (is_empty())  [[unlikely]]     { empty_list(); return; }
     if (pos == 0)                     { push_front(arg); }
@@ -323,7 +331,7 @@ public:
     ++m_size;
   }
 
-  auto push_at(const std::size_t pos, T &&arg) -> void
+  constexpr auto push_at(const std::size_t pos, T &&arg) -> void
   {
     if (is_empty()) [[unlikely]]  { empty_list(); return; }
     if (pos == 0)                 { push_front(arg); }
@@ -340,6 +348,100 @@ public:
     new_node->m_data    = arg;
     prev_node->m_next   = new_node;
     new_node->m_next    = next_node;
+    //
+    ++m_size;
+  }
+
+  /**
+  * @brief adds value after specific location
+  * @param after : the value you want add value after it
+  * @param val : the value
+  */
+  [[deprecated]]
+  constexpr
+  auto push_after(const T& after, const T& val)
+      -> void
+  {
+    if (is_empty()) { empty_list(); return;}
+    if (after == at(m_tail)) { push_back(val); }
+    sh_ptr it = {m_head};
+    for(; it->m_next != nullptr && at(it) != after; it = it->m_next) {}
+    if (!it->m_next) { std::cerr << "- `pos` not found..."; return;}
+    //
+    sh_ptr new_node = allocate_node();
+    new_node->m_data = val; // add data to new_node
+    new_node->m_next = it->m_next; // new_node's next now points at what it's next it
+    it->m_next = new_node; // it's next points to new_node
+    //
+    ++m_size;
+  }
+
+  //[[deprecated]]
+  constexpr
+  auto push_after(T&& after, T&& val) 
+      -> void
+  {
+    if (is_empty()) [[unlikely]] { empty_list(); return;}
+    if (after == at(m_tail)) { push_back(val); }
+    if (after == at(m_head)) { push_front(val); }
+    sh_ptr it = {m_head};
+    for( ; at(it) != after; it = it->m_next ) {}
+    //
+    if (!it->m_next) { std::cerr << "- `pos` not found..."; return;}
+    //
+    sh_ptr new_node = allocate_node();
+    new_node->m_data = val; // add data to new_node
+    new_node->m_next = it->m_next; // new_node's next now points at what it's next it
+    it->m_next = new_node; // it's next points to new_node
+    //
+    ++m_size;
+  }
+
+  /**
+   * @brief pushs element before a node
+   * 
+   * @param before the node that you wanna push before
+   * @param val the value
+   */
+  constexpr
+  auto push_before(const T& before, const T& val)
+      -> void
+  {
+    if (is_empty()) { empty_list(); return; }
+    auto temp = m_head;
+    auto temp_next = temp->m_next;
+    //
+    while( at(temp_next) != before ) {
+      temp = temp->m_next; // before next node
+      temp_next = temp->m_next; // the node that we are pushing before
+    }
+    if ( !temp_next ) { std::cerr << "- pos not found...\n"; }
+    sh_ptr new_node = allocate_node();
+    temp->m_next = new_node; // before node pointing at new node
+    new_node->m_data = val;
+    new_node->m_next = temp_next; // the node we added points at next node
+    //
+    ++m_size;
+  }
+
+
+  constexpr
+  auto push_before( T&& before, T&& val)
+      -> void
+  {
+    if (is_empty()) { empty_list(); return; }
+    auto temp = m_head;
+    auto temp_next = temp->m_next;
+    //
+    while( at(temp_next) != before ) {
+      temp = temp->m_next; // before next node
+      temp_next = temp->m_next; // the node that we are pushing before
+    }
+    if ( !temp_next ) { std::cerr << "- pos not found...\n"; }
+    sh_ptr new_node = allocate_node();
+    temp->m_next = new_node; // before node pointing at new node
+    new_node->m_data = val;
+    new_node->m_next = temp_next; // the node we added points at next node
     //
     ++m_size;
   }
@@ -514,8 +616,8 @@ public:
   }
 
   /**
-  * @brief returns the loacation of that node containinng target, count from the ritgh to left
-  * @conplexity O(n)
+  * @brief returns the location of that node containing target, count from the right to left
+  * @complexity O(n)
   * @param target
   * @return std::int64_t
   */
