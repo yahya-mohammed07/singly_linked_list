@@ -635,20 +635,20 @@ public:
   * @brief erases the list
   * @complexity O(n)
   */
+  constexpr
   auto clear() -> void
   {
-    if (is_empty()) [[unlikely]] { empty_list(); return; }
-    sh_ptr it = m_head;
-    sh_ptr temp     = {};
-    while ( it != nullptr ) {
-      temp = it->m_next;
-      it = nullptr;
-      it = temp;
+    if (is_empty()) { empty_list(); return; }
+    sh_ptr it;
+    while ( m_head != nullptr ) {
+      it = m_head->m_next;
+      m_head->m_next = nullptr;
+      m_head = it;
     }
-    m_head.reset();
-    m_tail.reset();
-    it.reset();
     m_size = {};
+  }
+  constexpr ~List_() {
+    clear();
   }
 }; // end of class List_<T>
 
