@@ -322,9 +322,8 @@ public:
   */
   constexpr auto push_at(const std::size_t pos, const T &arg) -> void
   {
-    if (is_empty())       { empty_list(); return; }
-    if (pos == 0)                     { push_front(arg); }
-    if (pos == size()-1)              { push_back(arg); }
+    if (pos == 0)                     { push_front(arg); return; }
+    if (pos == size()-1)              { push_back(arg); return; }
     /* adding nodes between previous and next */
     sh_ptr prev_node  = allocate_node(); // hold previous node
     sh_ptr new_node   = allocate_node(); // hold new node
@@ -343,9 +342,8 @@ public:
 
   constexpr auto push_at(const std::size_t pos, T &&arg) -> void
   {
-    if (is_empty())   { empty_list(); return; }
-    if (pos == 0)                 { push_front(arg); }
-    if (pos == size()-1)          { push_back(arg); }
+    if (pos == 0)                 { push_front(arg); return; }
+    if (pos == size()-1)          { push_back(arg); return; }
     /* adding nodes between previous and next */
     sh_ptr prev_node  = allocate_node(); // hold previous node
     sh_ptr new_node   = allocate_node(); // hold new node
